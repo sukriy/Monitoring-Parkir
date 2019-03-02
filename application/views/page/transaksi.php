@@ -1,0 +1,132 @@
+<?php
+	include('header.php');
+?>
+	<div class="breadcrumbs">
+		<div class="col-sm-4">
+			<div class="page-header float-left">
+				<div class="page-title">
+					<h1>Dashboard</h1>
+				</div>
+			</div>
+		</div>
+		<div class="col-sm-8">
+			<div class="page-header float-right">
+				<div class="page-title">
+					<ol class="breadcrumb text-right">
+						<li><a href="<?=base_url();?>">Dashboard</a></li>
+						<li><a href="<?=base_url('Admin/Transaksi');?>">Transaksi</a></li>
+						<li class="active">Modif</li>
+					</ol>
+				</div>
+			</div>
+		</div>
+	</div>
+        <div class="content mt-3">
+            <div class="animated fadeIn">
+                <div class="row">
+					<div class="col-lg-12">
+						<div class="card">
+							<div class="card-header">
+							<?php
+								if($_SESSION['level']=='admin'){
+									$hak = array();
+									foreach($menulist[strtolower($this->router->fetch_method())] as $key=>$value){
+										array_push($hak, $key); 
+									}
+								}else{
+									$hak = $hak_akses[$_SESSION['level']][strtolower($this->router->fetch_method())];
+								}
+								if(array_search("baru",$hak)!=''){
+									echo "<button type='submit' class='btn btn-success btn-flat m-b-30 m-t-30' name='tambah'>Tambah</button>";
+								}
+							?>
+								<?=$this->session->flashdata('transaksi');?>
+								<?=$this->session->flashdata('message');?>
+							</div>
+							<div class="card-body">
+								<div class='container'>
+									<div class="table-responsive">
+										<table class='table table-bordered table-hover compact example'>
+											<thead>
+												<tr>
+													<th>ID_transaksi</th>
+													<th>Staff</th>
+													<th>Masuk</th>
+													<th>Keluar</th>
+													<th>Jenis</th>
+													<th>Plat</th>
+													<th>Lokasi</th>
+													<th>Manage</th>
+												</tr>
+											</thead>
+											<tbody>
+											<?php
+												foreach($load as $key=>$value){
+													$ada = 0;
+													echo "
+													<tr>
+														<td>".cetak($value->id_transaksi)."</td>
+														<td>".cetak($value->nama_staff)."</td>
+														<td>".cetak_tglwkt($value->tgl_masuk)."</td>
+														<td>".cetak_tglwkt($value->tgl_keluar)."</td>
+														<td>".cetak($value->jenis)."</td>
+														<td>".cetak($value->plat)."</td>
+														<td>".cetak($value->lokasi)."</td>
+														<td>";
+													
+													if(array_search("print",$hak)!=''){
+														if($ada>0) echo "&nbsp;|&nbsp;";
+														echo "<a href='#' class='print' style='color:blue'>Print</a>";
+														$ada++;
+													}
+													if(array_search("hapus",$hak)!=''){
+														if($ada>0) echo "&nbsp;|&nbsp;";
+														echo "<a href='#' class='hapus' style='color:blue'>Hapus</a>";
+													}
+													echo "
+														</td>
+													</tr>
+													";
+												}
+											?>
+											</tbody>
+										</table>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+                </div>
+            </div><!-- .animated -->
+        </div><!-- .content -->
+
+<?php
+	include('footer.php');
+?>
+<script type="text/javascript">
+	$('.example tbody').on('click', '.print', function (e) {
+		e.preventDefault();
+		window.open("<?=base_url('Admin/transaksi_print?print=');?>"+$(this).closest('tr').find("td:first").text());
+	})
+	$('.example tbody').on('click', '.hapus', function (e) {
+		e.preventDefault();
+		swal({
+			title: "Apakah Anda yakin?",
+			text: "Sekali dihapus, Anda tidak dapat lagi mengembalikannya!",
+			icon: "warning",
+			buttons: true,
+			dangerMode: true,
+		}).then((willDelete) => {
+			if (willDelete) {
+				$(".se-pre-con").fadeIn("slow");
+				$.post("<?=base_url('Admin/ajax_transaksi_hapus'); ?>", {'hapus' : 1, 'id_transaksi' : $(this).closest('tr').find("td:first").text(), <?php echo $this->security->get_csrf_token_name(); ?>: $("input[name=<?php echo $this->security->get_csrf_token_name(); ?>]").val()}, function(result){
+					location.reload();
+				});	
+			}
+		});	
+	});
+	$('button[name=tambah]').click(function(e){
+		e.preventDefault();
+		window.location.replace("<?=base_url('Admin/transaksi_modif');?>");
+	});
+</script>
